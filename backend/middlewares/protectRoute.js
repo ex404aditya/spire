@@ -1,4 +1,4 @@
-import User from "../models/userModel";
+import User from "../models/userModel.js";
 
 const protectRoute = async (req, res, next) => {
   try {
@@ -18,3 +18,5 @@ const protectRoute = async (req, res, next) => {
     console.log("Error in logoutUser", err.message);
   }
 };
+
+export default protectRoute;
