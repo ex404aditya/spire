@@ -14,6 +14,7 @@ const HomePage = () => {
   useEffect(() => {
     const getFeedPosts = async () => {
       setLoading(true);
+      setPosts([]);
       try {
         const res = await fetch(`/api/posts/feed`);
         const data = await res.json();
@@ -42,9 +43,9 @@ const HomePage = () => {
           <Spinner size="xl" />
         </Flex>
       )}
-      {posts.map((post) => (
-        <Post key={post._id} post={post} postedBy={post.postedBy} />
-      ))}
+      {posts.map((post) => {
+        return <Post key={post._id} post={post} postedBy={post.postedBy} />;
+      })}
     </>
   );
 };

@@ -100,6 +100,7 @@ const Actions = ({ post }) => {
         if (p._id === post._id) {
           return { ...p, replies: [...p.replies, data] };
         }
+        return p;
       });
       setPosts(updatedPosts);
       showToast("Success", "Reply posted successfully", "success");
