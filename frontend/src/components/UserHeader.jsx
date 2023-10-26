@@ -25,7 +25,7 @@ const UserHeader = ({ user }) => {
   const toast = useToast();
   const currentUser = useRecoilValue(userAtom); //logged in user
   const [following, setFollowing] = useState(
-    currentUser ? user.followers.includes(currentUser._id) : false
+    currentUser ? user.followers.includes(currentUser?._id) : false
   );
   const showToast = useShowToast();
   const [updating, setUpdating] = useState(false);

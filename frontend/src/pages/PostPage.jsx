@@ -5,57 +5,122 @@ import {
   Text,
   Box,
   Divider,
-  Center,
   Button,
+  Spinner,
 } from "@chakra-ui/react";
-import { useState } from "react";
-import { BsThreeDots } from "react-icons/bs";
 import Actions from "../components/Actions";
 import Comment from "../components/Comment";
+import { useEffect } from "react";
+import useShowToast from "../hooks/useShowToast";
+import { useNavigate, useParams } from "react-router-dom";
+import useGetUserProfile from "../hooks/useGetUserProfile";
+import { formatDistanceToNow } from "date-fns";
+import { useRecoilState, useRecoilValue } from "recoil";
+import userAtom from "../atoms/userAtom";
+import { DeleteIcon } from "@chakra-ui/icons";
+import postsAtom from "../atoms/postsAtom";
 
 function PostPage() {
-  const [liked, setLiked] = useState(false);
+  const { user, loading } = useGetUserProfile();
+  const [posts, setPosts] = useRecoilState(postsAtom);
+  const showToast = useShowToast();
+  const { pid } = useParams();
+  const currentUser = useRecoilValue(userAtom);
+  const navigate = useNavigate();
+
+  const currentPost = posts[0];
+
+  useEffect(() => {
+    const getPost = async () => {
+      try {
+        const res = await fetch(`/api/posts/${pid}`);
+        const data = await res.json();
+        if (data.error) {
+          showToast("Error", data.error, "error");
+          return;
+        }
+
+        setPosts([data]);
+      } catch (error) {
+        showToast("Error", error.message, "error");
+      }
+    };
+    getPost();
+  }, [showToast, pid, setPosts]);
+
+  const handleDeletePost = async () => {
+    try {
+      if (!window.confirm("Are you sure to delete this post?")) return;
+
+      const res = await fetch(`/api/posts/${currentPost._id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.error) {
+        showToast("Error", data.error, "error");
+        return;
+      }
+      showToast("Success", "Post deleted", "success");
+      navigate(`/${user.username}`);
+    } catch (error) {
+      showToast("Error", error.message, "error");
+    }
+  };
+
+  if (!user && loading) {
+    return (
+      <Flex justifyContent={"center"}>
+        <Spinner size={"xl"} />
+      </Flex>
+    );
+  }
+
+  if (!currentPost) return null;
+
   return (
     <>
       <Flex>
         <Flex w={"full"} alignItems={"center"} gap={3}>
-          <Avatar src="/will-deepu.png" size={"md"} name="Will Deepu" />
+          <Avatar src={user.profilePic} size={"md"} name="Will Deepu" />
           <Flex>
             <Text fontSize={"sm"} fontWeight={"bold"}>
-              willdeepu
+              {user.username}
             </Text>
             <Image src="/verified.png" w={4} h={4} ml={4} />
           </Flex>
         </Flex>
         <Flex gap={4} alignItems={"center"}>
-          <Text fontSize={"sm"} color={"gray.light"}>
-            1d
+          <Text fontSize={"xs"} w={36} color={"gray.light"} textAlign={"right"}>
+            {formatDistanceToNow(new Date(currentPost.createdAt))} ago
           </Text>
-          <BsThreeDots />
+
+          {currentUser?._id === user._id && (
+            <DeleteIcon
+              size={20}
+              cursor={"pointer"}
+              onClick={handleDeletePost}
+            />
+          )}
         </Flex>
       </Flex>
 
-      <Text my={3}>What Kegan Level are you?</Text>
-      <Box
-        borderRadius={6}
-        overflow={"hidden"}
-        border={"1px solid"}
-        borderColor={"gray.light"}
-      >
-        <Image src="/post-1.jpg" w={"full"} />
-      </Box>
+      <Text my={3}>{currentPost.text}</Text>
+
+      {currentPost.img && (
+        <Box
+          borderRadius={6}
+          overflow={"hidden"}
+          border={"1px solid"}
+          borderColor={"gray.light"}
+        >
+          <Image src={currentPost.img} w={"full"} />
+        </Box>
+      )}
+
       <Flex gap={3} my={3}>
-        <Actions liked={liked} setLiked={setLiked} />
+        <Actions post={currentPost} />
       </Flex>
-      <Flex gap={2} alignItems={"center"}>
-        <Text color={"gray.light"} fontSize={"sm"}>
-          838 replies
-        </Text>
-        <Box w={0.5} h={0.5} borderRadius={"full"} bg={"gray.light"} />
-        <Text color={"gray.light"} fontSize={"sm"}>
-          {3300 + (liked ? 1 : 0)} likes
-        </Text>
-      </Flex>
+
       <Divider my={4} />
 
       <Flex justifyContent={"space-between"}>
@@ -70,27 +135,16 @@ function PostPage() {
       </Flex>
 
       <Divider my={4} />
-      <Comment
-        comment="imo im the 3rd one my agency has no bounds"
-        createdAt="2d"
-        likes={100}
-        username="johnycash"
-        userAvatar="https://bit.ly/dan-abramov"
-      />
-      <Comment
-        comment="imo im the 1st  one my agency has no bounds"
-        createdAt="4d"
-        likes={21}
-        username="kentdodd"
-        userAvatar="https://bit.ly/kent-c-dodds"
-      />
-      <Comment
-        comment="imo im the 4th one my agency has no bounds"
-        createdAt="11h"
-        likes={440}
-        username="kanyewest"
-        userAvatar="https://bit.ly/code-beast"
-      />
+      {currentPost.replies.map((reply) => (
+        <Comment
+          reply={reply}
+          key={reply._id}
+          lastReply={
+            reply._id ===
+            currentPost.replies[currentPost.replies.length - 1]._id
+          }
+        />
+      ))}
     </>
   );
 }
