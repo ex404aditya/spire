@@ -8,6 +8,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { FiLogOut } from "react-icons/fi";
 import useLogout from "../hooks/useLogout";
 import authScreenAtom from "../atoms/authAtom";
+import { BsChatLeftTextFill } from "react-icons/bs";
 
 const Header = () => {
   const { colorMode, toggleColorMode } = useColorMode();
@@ -23,7 +24,11 @@ const Header = () => {
         </Link>
       )}
       {!user && (
-        <Link as={RouterLink} to={"/auth"} onClick={() => setAuthScreen("login")}>
+        <Link
+          as={RouterLink}
+          to={"/auth"}
+          onClick={() => setAuthScreen("login")}
+        >
           Login
         </Link>
       )}
@@ -38,6 +43,9 @@ const Header = () => {
         <Flex alignItems={"center"} gap={4}>
           <Link as={RouterLink} to={`/${user.username}`}>
             <RxAvatar size={24} />
+          </Link>
+          <Link as={RouterLink} to={`/chat`}>
+            <BsChatLeftTextFill size={20} />
           </Link>
           <Button onClick={logout} size={"xs"}>
             <FiLogOut size={20} />
