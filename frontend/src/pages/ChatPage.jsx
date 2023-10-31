@@ -8,11 +8,46 @@ import {
   SkeletonCircle,
   Text,
   useColorModeValue,
+  useStatStyles,
 } from "@chakra-ui/react";
 import Conversation from "../components/Conversation";
 import MessageContainer from "../components/MessageContainer";
+import { useEffect, useState } from "react";
+import useShowToast from "../hooks/useShowToast";
+import { useRecoilState } from "recoil";
+import {
+  conversationsAtom,
+  selectedConversationAtom,
+} from "../atoms/messagesAtom";
+import { BsChatRightDots } from "react-icons/bs";
 
 const ChatPage = () => {
+  const showToast = useShowToast();
+  const [loadingConvo, setLoadingConvo] = useState(true);
+  const [conversations, setConversations] = useRecoilState(conversationsAtom);
+  const [selectedConvo, setSelectedConvo] = useRecoilState(
+    selectedConversationAtom
+  );
+
+  useEffect(() => {
+    const getConversations = async () => {
+      try {
+        const res = await fetch(`/api/messages/conversations`);
+        const data = await res.json();
+        if (data.error) {
+          showToast("Error", data.error, "error");
+          return;
+        }
+        console.log(data);
+        setConversations(data);
+      } catch (error) {
+        showToast("Error", error.message, "error");
+      } finally {
+        setLoadingConvo(false);
+      }
+    };
+    getConversations();
+  }, [showToast, setConversations]);
   return (
     <Box
       position={"absolute"}
@@ -38,13 +73,13 @@ const ChatPage = () => {
         mx={"auto"}
       >
         <Flex
+          flex={30}
           gap={2}
           maxW={{
             sm: "250px",
             md: "full",
           }}
           flexDirection={"column"}
-          flex={30}
           mx={"auto"}
         >
           <Text
@@ -62,7 +97,7 @@ const ChatPage = () => {
               </Button>
             </Flex>
           </form>
-          {false &&
+          {loadingConvo &&
             [0, 1, 2, 3, 4].map((_, i) => (
               <Flex
                 key={i}
@@ -80,27 +115,29 @@ const ChatPage = () => {
                 </Flex>
               </Flex>
             ))}
-          <Conversation />
-          <Conversation />
-
-          <Conversation />
-
-          <Conversation />
+          {!loadingConvo &&
+            conversations.map((conversation) => (
+              <Conversation
+                key={conversation._id}
+                conversation={conversation}
+              />
+            ))}
         </Flex>
-        {/* <Flex
-          flex={70}
-          borderRadius={"md"}
-          p={2}
-          flexDirection={"column"}
-          alignItems={"center"}
-          justifyContent={"center"}
-          height={"400px"}
-        >
-          <BsChatRightDots size={80} />
-          <Text fontSize={20}>Select a conversation to start messaging </Text>
-        </Flex> */}
-
-        <MessageContainer />
+        {!selectedConvo._id && (
+          <Flex
+            flex={70}
+            borderRadius={"md"}
+            p={2}
+            flexDirection={"column"}
+            alignItems={"center"}
+            justifyContent={"center"}
+            height={"400px"}
+          >
+            <BsChatRightDots size={80} />
+            <Text fontSize={20}>Select a conversation to start messaging </Text>
+          </Flex>
+        )}
+        {selectedConvo._id && <MessageContainer />}
       </Flex>
     </Box>
   );
