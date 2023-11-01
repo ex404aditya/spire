@@ -27,7 +27,10 @@ const MessageContainer = () => {
 
   useEffect(() => {
     const getMessages = async () => {
+      setLoadingMessages(true);
+      setMessages([]);
       try {
+        if (selectedConvo.template) return;
         const res = await fetch(`/api/messages/${selectedConvo.userId}`);
         const data = await res.json();
         if (data.error) {
@@ -99,7 +102,7 @@ const MessageContainer = () => {
             />
           ))}
       </Flex>
-      <MessageInput />
+      <MessageInput setMessages={setMessages} />
     </Flex>
   );
 };
