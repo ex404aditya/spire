@@ -20,6 +20,7 @@ import {
 } from "../atoms/messagesAtom";
 import { BsChatRightDots } from "react-icons/bs";
 import userAtom from "../atoms/userAtom";
+import { useSocket } from "../context/SocketContext";
 
 const ChatPage = () => {
   const showToast = useShowToast();
@@ -33,6 +34,7 @@ const ChatPage = () => {
   );
 
   const currentUser = useRecoilValue(userAtom);
+  const { socket, onlineUsers } = useSocket();
 
   useEffect(() => {
     const getConversations = async () => {
@@ -183,6 +185,9 @@ const ChatPage = () => {
             conversations.map((conversation) => (
               <Conversation
                 key={conversation._id}
+                isOnline={onlineUsers.includes(
+                  conversation.participants[0]._id
+                )}
                 conversation={conversation}
               />
             ))}

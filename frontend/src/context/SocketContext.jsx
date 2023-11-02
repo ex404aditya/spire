@@ -11,21 +11,27 @@ export const useSocket = () => {
 
 export const SocketContextProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const user = useRecoilValue(userAtom);
 
   useEffect(() => {
-    const newSocket = io("http://localhost:5001", {
+    const socket = io("http://localhost:5001", {
       query: {
         userId: user?._id,
       },
     });
 
-    setSocket(newSocket);
+    setSocket(socket);
 
-    return () => newSocket && newSocket.close();
+    socket.on("getOnlineUsers", (users) => {
+      setOnlineUsers(users);
+    });
+
+    return () => socket && socket.close();
   }, [user?._id]);
+
   return (
-    <SocketContext.Provider value={{ socket }}>
+    <SocketContext.Provider value={{ socket, onlineUsers }}>
       {children}
     </SocketContext.Provider>
   );
