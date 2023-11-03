@@ -16,21 +16,20 @@ import {
   conversationsAtom,
   selectedConversationAtom,
 } from "../atoms/messagesAtom";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 import userAtom from "../atoms/userAtom";
 import { useSocket } from "../context/SocketContext";
 
 const MessageContainer = () => {
   const showToast = useShowToast();
-  const [selectedConvo, setSelectedConvo] = useRecoilState(
-    selectedConversationAtom
-  );
+
+  const currentUser = useRecoilValue(userAtom);
+  const selectedConvo = useRecoilValue(selectedConversationAtom);
   const setConversations = useSetRecoilState(conversationsAtom);
 
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [messages, setMessages] = useState([]);
 
-  const currentUser = useRecoilValue(userAtom);
   const { socket } = useSocket();
   const messageEndRef = useRef(null);
 
@@ -61,6 +60,35 @@ const MessageContainer = () => {
   }, [socket, selectedConvo, setConversations]);
 
   useEffect(() => {
+    const lastMessageIsFromOtherUser =
+      messages.length &&
+      messages[messages.length - 1].sender !== currentUser._id;
+    if (lastMessageIsFromOtherUser) {
+      socket.emit("markMessagesAsSeen", {
+        conversationId: selectedConvo._id,
+        userId: selectedConvo.userId,
+      });
+    }
+
+    socket.on("messagesSeen", ({ conversationId }) => {
+      if (selectedConvo._id === conversationId) {
+        setMessages((prev) => {
+          const updatedMessages = prev.map((message) => {
+            if (!message.seen) {
+              return {
+                ...message,
+                seen: true,
+              };
+            }
+            return message;
+          });
+          return updatedMessages;
+        });
+      }
+    });
+  }, [socket, currentUser._id, messages, selectedConvo]);
+
+  useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -84,7 +112,7 @@ const MessageContainer = () => {
       }
     };
     getMessages();
-  }, [showToast, selectedConvo.userId]);
+  }, [showToast, selectedConvo.userId, selectedConvo.template]);
 
   return (
     <Flex
