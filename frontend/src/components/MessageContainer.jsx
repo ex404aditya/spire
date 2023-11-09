@@ -153,7 +153,6 @@ const MessageContainer = () => {
               <Flex flexDir={"column"} gap={2}>
                 <Skeleton h={"8px"} w={"250px"} />
                 <Skeleton h={"8px"} w={"250px"} />
-
                 <Skeleton h={"8px"} w={"250px"} />
               </Flex>
               {i % 2 !== 0 && <SkeletonCircle size={7} />}

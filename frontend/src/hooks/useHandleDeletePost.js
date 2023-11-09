@@ -1,5 +1,3 @@
-import React from "react";
-
 const useHandleDeletePost = async (e) => {
   try {
     e.preventDefault();

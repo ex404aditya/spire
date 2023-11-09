@@ -23,7 +23,7 @@ const Conversation = ({ conversation, isOnline }) => {
   const [selectedConvo, setSelectedConvo] = useRecoilState(
     selectedConversationAtom
   );
-  const colorMode = useColorMode();
+  const { colorMode } = useColorMode();
 
   console.log("selected conversation", selectedConvo);
   return (
